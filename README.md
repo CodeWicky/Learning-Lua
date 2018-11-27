@@ -217,6 +217,108 @@ userdata 是一种用户自定义数据，用于表示一种由应用程序或 C
 
 ---
 
+## 变量
+
+变量在使用前，必须在代码中进行声明，即创建该变量。
+
+编译程序执行代码之前编译器需要知道如何给语句变量开辟存储区，用于存储变量的值。
+
+Lua 变量有三种类型：全局变量、局部变量、表中的域。
+
+Lua 中的变量全是全局变量，那怕是语句块或是函数里，除非用 local 显式声明为局部变量。
+
+局部变量的作用域为从声明位置开始到所在语句块结束。
+
+变量的默认值均为 nil。
+
+```
+-- test.lua 文件脚本
+a = 5               -- 全局变量
+local b = 5         -- 局部变量
+
+function joke()
+    c = 5           -- 全局变量
+    local d = 6     -- 局部变量
+end
+
+joke()
+print(c,d)          --> 5 nil
+
+do 
+    local a = 6     -- 局部变量
+    b = 6           -- 对局部变量重新赋值
+    print(a,b);     --> 6 6
+end
+
+print(a,b)      --> 5 6
+```
+
+### 赋值
+
+```
+-- 基础赋值
+a = "hello" .. "world"
+
+-- 依次赋值（遇到赋值语句Lua会先计算右边所有的值然后再执行赋值操作，所以我们可以这样进行交换变量的值）
+x, y = y, x                     -- swap 'x' for 'y'
+
+-- 个数不同
+--[[
+a. 变量个数 > 值的个数             按变量个数补足nil
+b. 变量个数 < 值的个数             多余的值会被忽略
+--]]
+```
+
+## 循环
+
+### while
+
+```
+while(<条件>)
+do
+   <执行体>
+end
+```
+
+### for
+
+```
+-- var 从 exp1 变化到 exp2，每次变化以 exp3 为步长递增 var，并执行一次 "执行体"。exp3 是可选的，如果不指定，默认为1。
+for var=exp1,exp2,exp3 do  
+    <执行体>  
+end  
+```
+
+针对for，我们看一组代码：
+
+```
+function f(x)  
+    print("function")  
+    return x*2   
+end  
+for i=1,f(5) do 
+print(i)  
+end  
+```
+
+for的三个表达式在循环开始前一次性求值，以后不再进行求值。比如上面的f(x)只会在循环开始前执行一次，其结果用在后面的循环中。
+
+for同时支持泛型循环，类似于oc中的快速遍历：
+
+```
+days = {"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"}  
+for i,v in ipairs(days) do  print(v) end   
+```
+
+### repeat...until
+
+等同于do...while。
+
+### break
+跳出循环。
+
+---
+
 
 
 
