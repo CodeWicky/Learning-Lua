@@ -322,6 +322,93 @@ for i,v in ipairs(days) do  print(v) end
 
 ---
 
+## 流程控制
 
+```
+if (0)
+then
+	print("0 为 true")
+elseif (nil) 
+then
+	print("nil 为 false") 
+else 
+	print("只有nil和false是false，其他均为true")
+end
+```
 
+---
 
+## 函数
+
+```
+<作用域> function <函数名>( <参数1>, <参数2>, <参数3>..., <参数n>)
+    <函数体>
+    return <返回值>
+end
+```
+
+lua可返回多个返回值。
+
+```
+function maximum (a)
+    local mi = 1             -- 最大值索引
+    local m = a[mi]          -- 最大值
+    for i,val in ipairs(a) do
+       if val > m then
+           mi = i
+           m = val
+       end
+    end
+    return m, mi
+end
+
+print(maximum({8,10,23,12,5}))
+
+-- 执行结果 --
+23    3
+```
+
+lua也支持可变参数。
+
+```
+function average(...)
+   result = 0
+   local arg={...}    --> arg 为一个表，局部变量
+   for i,v in ipairs(arg) do
+      result = result + v
+   end
+   print("总共传入 " .. #arg .. " 个数")
+   return result/#arg
+end
+
+print("平均值为",average(10,5,3,4,5,6))
+```
+
+```
+function fwrite(fmt, ...)  ---> 固定的参数fmt
+    return io.write(string.format(fmt, ...))     
+end
+
+fwrite("runoob\n")       --->fmt = "runoob", 没有变长参数。  
+fwrite("%d%d\n", 1, 2)   --->fmt = "%d%d", 变长参数为 1 和 2
+```
+
+select函数
+
+通常在遍历变长参数的时候只需要使用 {…}，然而变长参数可能会包含一些 nil，那么就可以用 select 函数来访问变长参数了：select('#', …) 或者 select(n, …)
+
+select('#', …) 返回可变参数的长度
+select(n, …) 用于访问 n 到 select('#',…) 的参数
+调用select时，必须传入一个固定实参selector(选择开关)和一系列变长参数。如果selector为数字n,示例如下：
+
+```
+function foo(...)
+	for i = 1,select('#',...) do
+		print(select(i,...))
+	end
+end
+
+foo(1,2,3,4,5)
+```
+
+---
