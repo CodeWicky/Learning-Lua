@@ -520,3 +520,62 @@ print(string.sub(s, string.find(s, date)))    --> 30/05/1999
 
 ## 数组
 
+用表实现即可。
+
+---
+
+## 迭代器
+
+迭代器（iterator）是一种对象，它能够用来遍历标准模板库容器中的部分或全部元素，每个迭代器对象代表容器中的确定的地址。
+
+在Lua中迭代器是一种支持指针类型的结构，它可以遍历集合的每一个元素。
+
+### pairs()
+
+遍历当前表
+
+### ipairs()
+
+遍历当前表中的数组（非nil元素）
+
+### 实现一个迭代器
+
+```
+function square(iteratorMaxCount,currentNumber)
+   if currentNumber<iteratorMaxCount
+   then
+      currentNumber = currentNumber+1
+   return currentNumber, currentNumber*currentNumber
+   end
+end
+
+for i,n in square,3,0
+do
+   print(i,n)
+end
+```
+
+```
+array = {"Lua", "Tutorial"}
+
+function elementIterator (collection)
+   local index = 0
+   local count = #collection
+   -- 闭包函数
+   return function ()
+      index = index + 1
+      if index <= count
+      then
+         --  返回迭代器的当前元素
+         return collection[index]
+      end
+   end
+end
+
+for element in elementIterator(array)
+do
+   print(element)
+end
+```
+
+---
