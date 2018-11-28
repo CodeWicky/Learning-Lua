@@ -680,6 +680,215 @@ end
 
 ---
 
-## 模块与包
+## 模块
 
+模块类似于一个封装库，从 Lua 5.1 开始，Lua 加入了标准的模块管理机制，可以把一些公用的代码放在一个文件里，以 API 接口的形式在其他地方调用，有利于代码的重用和降低代码耦合度。形式上，更像是OC中类的概念。
+
+Lua 的模块是由变量、函数等已知元素组成的 table，因此创建一个模块很简单，就是创建一个 table，然后把需要导出的常量、函数放入其中，最后返回这个 table 就行。以下为创建自定义模块 module.lua，文件代码格式如下：
+
+```
+-- 文件名为 module.lua
+-- 定义一个名为 module 的模块
+module = {}
+ 
+-- 定义一个常量
+module.constant = "这是一个常量"
+ 
+-- 定义一个函数
+function module.func1()
+    io.write("这是一个公有函数！\n")
+end
+ 
+local function func2()
+    print("这是一个私有函数！")
+end
+ 
+function module.func3()
+    func2()
+end
+ 
+return module
+```
+
+### 使用module
+
+```
+-- test_module.lua 文件
+-- module 模块为上文提到到 module.lua
+require("module")
+ 
+print(module.constant)
+ 
+module.func3()
+```
+
+--- 
+
+## 元表
+
+元表提供了我们改变表行为的能力。
+
+我们可以通过`setmetatable`为表设置一个元表，在原表中我们通过修改相关函数实现来达到修改表行为的目的。我们还可以通过`getmetatable`获取表关联的元表。
+
+### __index/__newindex
+
+在表中，如果我们取一个表中不存在的键的值会直接返回nil，如果我们存一个表中不存在的键值，会直接创建一个新的键。
+
+现在我们想实现这样一个功能，取值是，如果当前表中没有对应的键值，去另一张表中取值，下文中我们姑且称为备援表。赋值时，先检测表中存不存在当前键值，若存在直接更新，若不存在，先检测备援表中是否存在当前键值，若存在，更新备援表中的值，若不存在则在当前表中新建一个键值。
+
+这个需求我们就可以通过`__index`和`__newindex`。
+
+```
+superTbl = {a = 1}
+superTbl.say = function (a)
+print("para = ",a)
+end
+superTbl.logA = function (a)
+print("come to logA")
+a.say(a.a)
+end
+metaTbl = {__index = superTbl,__newindex = superTbl}
+childTbl = {b = 2}
+childTbl = setmetatable(childTbl, metaTbl)
+childTbl.super = superTbl
+print("a = ",childTbl.a)
+print("b = ",childTbl.b)
+childTbl.say = function (a) 
+print("override para = ",a)
+end
+childTbl.say(2)
+childTbl.super.say(3)
+print("before")
+printT(childTbl)
+childTbl.a = 3
+print("after")
+printT(childTbl)
+childTbl.super.logA(superTbl)
+```
+
+上述代码中，我们则实现了这个需求。当然此处`__index`和`__newindex`中对应的表可以是不同的表。`__index`对应的是取值的备援表，`__newindex`对应的是更新值时的备援表。
+
+借助这个属性，结合module的概念，我们大概可以实现一个类的继承关系。
+
+### 运算操作
+
+|__add|__sub|__mul|__div|__mod|__unm|__concat|__eq|__lt|__le|
+|:--:|:--:|--:|:--:|--:|:--:|--:|:--:|--:|:--:|
+|+|-|*|/|%|-|..|==|<|<=|
+
+我们也可以自定义表的运算操作符。上述表中使我们支持的运算操作符。我们来看一个修改__add运算符的简单的示例:
+
+```
+-- 计算表中最大值，table.maxn在Lua5.2以上版本中已无法使用
+-- 自定义计算表中最大键值函数 table_maxn，即计算表的元素个数
+function table_maxn(t)
+    local mn = 0
+    for k, v in pairs(t) do
+        if mn < k then
+            mn = k
+        end
+    end
+    return mn
+end
+
+-- 两表相加操作
+mytable = setmetatable({ 1, 2, 3 }, {
+  __add = function(mytable, newtable)
+    for i = 1, table_maxn(newtable) do
+      table.insert(mytable, table_maxn(mytable)+1,newtable[i])
+    end
+    return mytable
+  end
+})
+
+secondtable = {4,5,6}
+
+mytable = mytable + secondtable
+    for k,v in ipairs(mytable) do
+print(k,v)
+end
+```
+
+### __call
+
+__call 元方法在 Lua 调用一个值时调用。以下实例演示了计算表中元素的和：
+
+```
+-- 计算表中最大值，table.maxn在Lua5.2以上版本中已无法使用
+-- 自定义计算表中最大键值函数 table_maxn，即计算表的元素个数
+function table_maxn(t)
+    local mn = 0
+    for k, v in pairs(t) do
+        if mn < k then
+            mn = k
+        end
+    end
+    return mn
+end
+
+-- 定义元方法__call
+mytable = setmetatable({10}, {
+  __call = function(mytable, newtable)
+    sum = 0
+    for i = 1, table_maxn(mytable) do
+        sum = sum + mytable[i]
+    end
+    for i = 1, table_maxn(newtable) do
+        sum = sum + newtable[i]
+    end
+    return sum
+  end
+})
+newtable = {10,20,30}
+print(mytable(newtable))
+```
+
+### __tostring 元方法
+
+__tostring 元方法用于修改表的输出行为。以下实例我们自定义了表的输出内容：
+
+```
+mytable = setmetatable({ 10, 20, 30 }, {
+  __tostring = function(mytable)
+    sum = 0
+    for k, v in pairs(mytable) do
+        sum = sum + v
+    end
+    return "表所有元素的和为 " .. sum
+  end
+})
+print(mytable)
+```
+
+---
+
+## 协同
+
+> 工程中未使用，待补
+
+---
+
+## 文件I/O
+
+> 工程中未使用，待补
+
+---
+
+## 错误处理
+
+> 工程中未使用，待补
+
+---
+
+## Debug
+
+> 工程中未使用，待补
+
+---
+
+## 垃圾回收
+
+
+
+---
 
