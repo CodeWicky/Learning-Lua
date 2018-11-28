@@ -477,7 +477,7 @@ print("字符串 3 是",string3)
 |string.lower(argument)|字符串全部转为小写字母|
 |string.gsub(mainString,findString,replaceString,num)|在字符串中替换,mainString为要替换的字符串， findString 为被替换的字符，replaceString 要替换的字符，num 替换次数（可以忽略，则全部替换）|
 |string.find (str, substr, [init, [end]])|在一个指定的目标字符串中搜索指定的内容(第三个参数为索引),返回其具体位置。不存在则返回 nil|
-|string.reverse(arg)|字符串反转(调用者需为字符串，实际翻转对象为传入参数，与调用者无关)|
+|string.reverse(arg)|字符串反转(调用者需为字符串或string，实际翻转对象为传入参数，与调用者无关)|
 |string.format(...)|返回一个类似printf的格式化字符串|
 |string.char(arg) 和 string.byte(arg[,int])|char 将整型数字转成字符并连接， byte 转换字符为整数值(可以指定某个字符，默认第一个字符)|
 |string.len(arg)|计算字符串长度|
@@ -579,3 +579,107 @@ end
 ```
 
 ---
+
+## table
+
+### concat函数
+
+```
+-- 函数原型 table.concat (table [, sep [, start [, end]]])
+
+a = {key = 1,key2 = 2,3,4,5,6}
+print((a,1,2,3))
+
+-- 运行结果 --
+415
+```
+
+### insert
+
+```
+-- 函数原型 table.insert (table, [pos,] value):
+
+function printT(a) 
+	print("tbl length = ",#a)
+	for k,v in pairs(a) do
+		print(k,v)
+	end
+end
+
+
+a = {key = 1}
+table.insert(a, 1,"a")
+
+
+printT(a)
+
+-- 运行结果 --
+tbl length = 	1
+1	a
+key	1
+
+```
+
+### remove函数
+
+```
+-- 函数原型 table.remove (table [, pos])
+
+
+function printT(a) 
+	print("tbl length = ",#a)
+	for k,v in pairs(a) do
+		print(k,v)
+	end
+end
+
+
+a = {key = 1,1,2,2,3,}
+table.remove(a, 1)
+
+
+printT(a)
+
+-- 运行结果 --
+tbl length = 	3
+1	2
+2	2
+3	3
+key	1
+
+```
+
+### sort函数
+
+```
+-- 函数原型 table.sort (table [, comp])
+
+fruits = {"banana","orange","apple","grapes"}
+print("排序前")
+for k,v in ipairs(fruits) do
+	print(k,v)
+end
+
+table.sort(fruits)
+print("排序后")
+for k,v in ipairs(fruits) do
+	print(k,v)
+end
+
+-- 运行结果 --
+1	banana
+2	orange
+3	apple
+4	grapes
+排序后
+1	apple
+2	banana
+3	grapes
+4	orange
+```
+
+---
+
+## 模块与包
+
+
