@@ -443,3 +443,80 @@ foo(1,2,3,4,5)
 
 ## 字符串
 
+### 表达方式
+
+字符串或串(String)是由数字、字母、下划线组成的一串字符。
+
+Lua 语言中字符串可以使用以下三种方式来表示：
+
+单引号间的一串字符。
+双引号间的一串字符。
+[[和]]间的一串字符。
+以上三种方式的字符串实例如下：
+
+```
+string1 = "Lua"
+print("\"字符串 1 是\"",string1)
+string2 = 'runoob.com'
+print("字符串 2 是",string2)
+
+string3 = [["Lua 教程"]]
+print("字符串 3 是",string3)
+
+-- 输出结果 --
+"字符串 1 是"    Lua
+字符串 2 是    runoob.com
+字符串 3 是    "Lua 教程"
+```
+
+### 字符串操作
+
+|方法|用途|
+|:--|:--|
+|string.upper(argument)|字符串全部转为大写字母|
+|string.lower(argument)|字符串全部转为小写字母|
+|string.gsub(mainString,findString,replaceString,num)|在字符串中替换,mainString为要替换的字符串， findString 为被替换的字符，replaceString 要替换的字符，num 替换次数（可以忽略，则全部替换）|
+|string.find (str, substr, [init, [end]])|在一个指定的目标字符串中搜索指定的内容(第三个参数为索引),返回其具体位置。不存在则返回 nil|
+|string.reverse(arg)|字符串反转(调用者需为字符串，实际翻转对象为传入参数，与调用者无关)|
+|string.format(...)|返回一个类似printf的格式化字符串|
+|string.char(arg) 和 string.byte(arg[,int])|char 将整型数字转成字符并连接， byte 转换字符为整数值(可以指定某个字符，默认第一个字符)|
+|string.len(arg)|计算字符串长度|
+|string.rep(string, n)|返回字符串string的n个拷贝|
+|..|链接两个字符串|
+|string.gmatch(str, pattern)|回一个迭代器函数，每一次调用这个函数，返回一个在字符串 str 找到的下一个符合 pattern 描述的子串。如果参数 pattern 描述的字符串没有找到，迭代函数返回nil|
+|string.match(str, pattern, init)|string.match()只寻找源字串str中的第一个配对. 参数init可选, 指定搜寻过程的起点, 默认为1。 在成功配对时, 函数将返回配对表达式中的所有捕获结果; 如果没有设置捕获标记, 则返回整个配对字符串. 当没有成功的配对时, 返回nil|
+
+### 示例
+
+```
+-- 字符转换
+-- 转换第一个字符
+print(string.byte("Lua"))
+-- 转换第三个字符
+print(string.byte("Lua",3))
+-- 转换末尾第一个字符
+print(string.byte("Lua",-1))
+-- 第二个字符
+print(string.byte("Lua",2))
+-- 转换末尾第二个字符
+print(string.byte("Lua",-2))
+
+-- 整数 ASCII 码转换为字符
+print(string.char(97))
+
+
+-- 字符串复制 2 次
+repeatedString = string.rep(string2,2)
+print(repeatedString)
+
+-- 匹配模式
+s = "Deadline is 30/05/1999, firm"
+date = "%d%d/%d%d/%d%d%d%d"
+print(string.sub(s, string.find(s, date)))    --> 30/05/1999
+
+```
+
+--- 
+
+## 数组
+
