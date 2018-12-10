@@ -950,6 +950,27 @@ print(r.length)
 r:printArea()
 ```
 
+`.`与`:`的区别是：
+
+> :是个语法糖，调用的函数会自动传递参数self
+
+eg:
+
+```
+local a = {x = 0}
+function a.foo(self, a)
+self.x = a
+end
+function a:foo2(a)
+self.x = a
+end
+--调用时：
+a.foo(a, 2)
+a.foo2(2)
+```
+
+上述两个操作是等价的，用:时就省去了定义和调用时需要额外添加self用来指代自身的麻烦
+
 ### 完整实例
 
 ```
