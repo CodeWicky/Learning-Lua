@@ -1061,5 +1061,7 @@ myrectangle = Rectangle:new(nil,10,20)
 myrectangle:printArea()
 ```
  
+ ### 继承分析
+ 
 
 
