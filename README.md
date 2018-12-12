@@ -1063,6 +1063,109 @@ myrectangle:printArea()
  
  ### 继承分析
  
-- https://blog.csdn.net/lightindarkness/article/details/79221371
+> 以下内容引自[Lua之模拟继承关系](https://blog.csdn.net/lightindarkness/article/details/79221371)
+
+```
+--模拟继承关系
+
+Universe = {name} --为了方便，我们称此表为u类表
+
+Universe.age = 404
+
+--构造方法
+function Universe:New(name)
+	local obj = {} --称此表为u实例表
+	setmetatable(obj, self)
+	self.__index = self
+	self.name = name
+	return obj
+end
+
+--普通方法
+function Universe:Creat()
+	print("This star exists in " .. self.name)
+end
+
+--无参数时传递可以传递nil或者为空, 这里模拟使Universe为父类, Planet为子类
+Planet = Universe:New(nil) --称此表为p类表
+
+Planet.color = "blue"
+Planet.number = 9999
+
+--构造方法
+function Planet:New(name)
+	local obj = Universe:New(name) --称此表为u实例表2
+	print("----------------构造方法中的obj------------------")
+	printer(obj)
+	print("----------------构造方法中的Planet----------------")
+	printer(self)
+	setmetatable(obj, self)
+	self.__index = self
+	return obj
+end
+
+--普通方法
+function Planet:Beauty()
+	print("What a Beautiful planet!")
+end
+
+star_1 = Planet:New("Beautiful universe")
+star_1:Creat()
+star_1:Beauty()
+
+print("--------------星球一的表-------------")
+printer(star_1)
+
+star_2 = Planet:New("Dark universe") --称此表为p实例表s
+star_2:Creat()
+star_2:Beauty()
+```
+
+![构造方法中的obj](https://img-blog.csdn.net/20180131194907611?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvTGlnaHRJbkRhcmtuZXNz/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+
+![构造方法中的planet](https://img-blog.csdn.net/20180131194925627?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvTGlnaHRJbkRhcmtuZXNz/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+
+![星球1中的表](https://img-blog.csdn.net/20180131194945142?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvTGlnaHRJbkRhcmtuZXNz/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+
+> 一开始Universe作为局部变量空表的元表，其__index索引指向自身。
+>
+> ![](https://img-blog.csdn.net/20180131202526144?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvTGlnaHRJbkRhcmtuZXNz/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+>
+> Planet作为Universe实例化的“对象”，其表结构与上面有些不同：
+>
+> ![](https://img-blog.csdn.net/20180131202720418?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvTGlnaHRJbkRhcmtuZXNz/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+>
+> 可能相对来说最难以理解的便是Planet中实例化方法中表的关系，obj作为Universe实例化出的一个表，将Planet设置为其元表，结构会是如何呢？请看下图：
+>
+> ![](https://img-blog.csdn.net/20180131202953851?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvTGlnaHRJbkRhcmtuZXNz/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+
+#### 私以为
+
+首先要明确一个概念，为表A设置元表为B的时候，**表B作为表A中一个保留字段存储**。此时表B及被认为是表A的元表，同理取表A元表时，只要去表A中寻找该字段即可。
+
+为了方便表述，我在代码中为每个临时表添加了一个代号。下文中使用代号来指代对应表。
+
+首先我们创建一个`u类表`。这个u类表代表着`Universe`这个类，这个表中的所有属性，就是Universe类的实例中，可以具有的属性及函数。**当我们添加构造方法或者普通方法时，我们实际上是给u类表添加了对应的成员变量**。
+
+当模拟出Universe类后，我们可以通过相应的构造方法去模拟一个Universe实例。这个实例的特点应该是，我去获取实例的属性时，应该可以找到Universe这个类的属性及函数。首先这个实例一定是一个表，然后我们的`u类表`应该是这个表的元表。此处由于我们Universe没有父类，所以直接新建了一个空表`u实例表`，并**将u实例表的元表设置为u类表，再将u类表中的__index指向u类表**。
+这样，最后将u实例表返回作为实例化生成的表。这样，当以new方法实例化一个Universe实例时，**我们拿到的是一个以`u类表`作为元表的空表**。**访问任意属性或方法时，由于实例表是空表，访问不到对应属性，则去查询元表，元表存在，又去查询元表的__index字段，__index字段对应的即为`u类表`，我们即找到了类中的属性和函数**。
+
+通过上述的结构，我们已经模拟了对象的形式。接下来我们考虑继承的形式。
+
+首先，如果Planet想要继承自Universe的话，**`p类表`应该是Universe的一个实例**，因为这样，`p类表`就具有了Universe的所有属性和函数。
+
+实例化Planet时候我们只要按照上述的规则让`p实例表`的元表为`p类表`即可保证。这里要考虑的是如何构造一个`p实例表`。当以name实例化一个Universe实例时，我们获取到的是一个包含name字段的以`u类表`为元表的新表。我们希望Planet以name实例化时也可以获取到一个包含name字段的以`p类表`为元表的新表。所以我们**构建p实例表时，可以以Universe的实例化方法创建一个表`u实例表2`，再替换其元表为`p类表`即可达到需求**。（当然，如果没有这个需要，你完全可以以自己的方法构建一个新表，比如创建一个空表）
+
+这样，当我们创建一个`p实例表s`时，我们获取到的是一个包含name字段的以`p类表`为元表的表。
+
+- 当我们访问name属性时，直接访问到`p实例表s`中的name字段。
+- 当访问Beauty()函数时，先在`p实例表s`中寻找函数，未找到，然后查询元表，查到`p类表`，此时在p类表中查询到Beauty()，完成函数调用。此处完成了子类接口的添加，以此模拟`封装`。
+- 当访问Create()函数时，同样的过程，不同的是，p类表中查询不到该函数。别忘了p类表是一个Universe实例，也就是一个以`u类表`作为元表的表，所以在p类表找不到函数时，即会查询其元表u类表中是否包含此函数，查询到Create()函数后，完成调用。此处完成了方法的`继承`。
+
+- 当Planet对应也覆写了Create()函数时，过程与上面一样，只不过在p类表中即可找到Create()函数，完成调用。此处完成了子类函数的覆写，以此模拟`多态`。
+
+至此，一个继承关系彻底模拟完成。
+
+
 
 
