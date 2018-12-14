@@ -882,6 +882,40 @@ Lua中，协同程序与线程的概念比较类似：拥有独立的堆栈，�
 |coroutine.running()|空|返回当前正在的协程，如果他被主线程调用的话，会返回nil|同返回值|
 |coroutine.status()|空|返回当前协程的状态：有running,suspended,normal,dead|同返回值|
 
+
+示例代码
+
+```lua
+function foo(a)
+	print("foo", a)
+	return coroutine.yield(2 * a)
+end
+
+co = coroutine.create(function ( a, b )
+	print("co-body", a, b)
+	local r = foo(a + 1)
+	print("co-body", r)
+	local r, s = coroutine.yield(a + b, a - b)
+	print("co-body", r, s)
+	return b, "end"
+end)
+
+print("main", coroutine.resume(co, 1, 10))
+print("main", coroutine.resume(co, "r"))
+print("main", coroutine.resume(co, "x", "y"))
+print("main", coroutine.resume(co, "x", "y"))
+
+--输出
+co-body 1 10
+foo 2
+main true 4
+co-body r
+main true 11, -9
+co-body x y
+main false 10 end
+main false cannot resume dead coroutine
+```
+
 > 剩下没看懂，需看更多资料
 
 ---
