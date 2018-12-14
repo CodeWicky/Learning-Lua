@@ -877,6 +877,7 @@ Lua中，协同程序与线程的概念比较类似：拥有独立的堆栈，�
 |函数名|函数参数|函数返回值|函数作用|
 |:---|:---|:---|:---|
 |coroutine.create(func)|接受单个参数，这个参数是coroutine的主函数|然后返回他的控制器（一个对象为thread）的对象|create函数创建一个新的coroutine，定义了携程内的任务流程。以面向对象的角度，可以看成是coroutien类创建了一个对象co|
+|coroutine.resume(co,[val1,...])|第一个参数：coroutine.create的返回值，即一个thread对象。<br>第二个参数：coroutine中执行需要的参数，是一个变长参数，可传人一多个。|如果程序没有任何运行错误的话，那么会返回true，之后的返回值是前一个调用coroutine.yield中传入的参数<br>如果有任何错误的话，就会返回false,加上错误信息|当你第一次调用coroutine的resume方法时，coroutine从主函数的第一行开始执行，之后再coroutine开始执行后，他会一直运行到自身终止或者是coroutine的下一个yield函数|
 
 > 剩下没看懂，需看更多资料
 
