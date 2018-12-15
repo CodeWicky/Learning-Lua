@@ -916,7 +916,74 @@ main false 10 end
 main false cannot resume dead coroutine
 ```
 
-> 剩下没看懂，需看更多资料
+我们还可以用coroutine模拟生产者消费者模式：
+
+```lua
+--生产者
+loop
+	while q is not full
+		create product
+		add the items to q
+	resume to consumer
+	
+--消费者
+loop
+	while q is not full
+		create product
+		add the items to q
+	resume to consumer
+```
+
+我们还可以以此来优化callback，比如一段代码的callback形式是下面这个样子的：
+
+```
+bob.walto(function (  )
+	bob.say(function (  )
+		jane.say("hello")
+	end,"hello")
+end, jane)
+```
+
+我们可以用coroutine让这个结构看起来更加清晰一些：
+
+```
+co = coroutine.create(function (  )
+	local current = coroutine.running
+	bob.walto(function (  )
+		coroutine.resume(current)
+	end, jane)
+	coroutine.yield()
+	bob.say(function (  )
+		coroutine.resume(current)
+	end, "hello")
+	coroutine.yield()
+	jane.say("hello"）
+end)
+
+coroutine.resume(co)
+```
+
+当然，我们还可以对函数进行一下封装，最终他是这个样子的：
+
+```
+function runAsyncFunc( func, ... )
+	local current = coroutine.running
+	func(function (  )
+		coroutine.resume(current)
+	end, ...)
+	coroutine.yield()
+end
+
+coroutine.create(function (  )
+	runAsyncFunc(bob.walkto, jane)
+	runAsyncFunc(bob.say, "hello")
+	jane.say("hello")
+end)
+
+coroutine.resume(co)
+```
+
+可以看出，这样以来，结构就清楚多了。
 
 ---
 
