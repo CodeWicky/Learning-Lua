@@ -989,7 +989,104 @@ coroutine.resume(co)
 
 ## 文件I/O
 
-> 工程中未使用，待补
+Lua I/O 库用于读取和处理文件。分为简单模式、完全模式。
+
+
+|模式|描述|
+|:--|:--|
+|r|以只读方式打开文件，该文件必须存在。|
+|w|打开只写文件，若文件存在则文件长度清为0，即该文件内容会消失。若文件不存在则建立该文件。|
+|a|以附加的方式打开只写文件。若文件不存在，则会建立该文件，如果文件存在，写入的数据会被加到文件尾，即文件原先的内容会被保留。（EOF符保留）|
+|r+|以可读写方式打开文件，该文件必须存在。|
+|w+|打开可读写文件，若文件存在则文件长度清为零，即该文件内容会消失。若文件不存在则建立该文件。|
+|a+|与a类似，但此文件可读可写|
+|b|二进制模式，如果文件是二进制文件，可以加上b|
+|+|号表示对文件既可以读也可以写|
+
+#### 简单模式
+
+```
+-- 以只读方式打开文件
+file = io.open("test.lua", "r")
+
+-- 设置默认输入文件为 test.lua
+io.input(file)
+
+-- 输出文件第一行
+print(io.read())
+
+-- 关闭打开的文件
+io.close(file)
+
+-- 以附加的方式打开只写文件
+file = io.open("test.lua", "a")
+
+-- 设置默认输出文件为 test.lua
+io.output(file)
+
+-- 在文件最后一行添加 Lua 注释
+io.write("--  test.lua 文件末尾注释")
+
+-- 关闭打开的文件
+io.close(file)
+```
+
+#### 完全模式
+
+```
+-- 以只读方式打开文件
+file = io.open("test.lua", "r")
+
+-- 输出文件第一行
+print(file:read())
+
+-- 关闭打开的文件
+file:close()
+
+-- 以附加的方式打开只写文件
+file = io.open("test.lua", "a")
+
+-- 在文件最后一行添加 Lua 注释
+file:write("--test")
+
+-- 关闭打开的文件
+file:close()
+```
+
+其他方法：
+
+- file:seek(optional whence, optional offset): 设置和获取当前文件位置,成功则返回最终的文件位置(按字节),失败则返回nil加错误信息。参数 whence 值可以是:
+	- "set": 从文件头开始
+	- "cur": 从当前位置开始[默认]
+	- "end": 从文件尾开始
+	- offset:默认为0
+	
+	不带参数file:seek()则返回当前位置,file:seek("set")则定位到文件头,file:seek("end")则定位到文件尾并返回文件大小
+- file:flush(): 向文件写入缓冲中的所有数据
+- io.lines(optional file name): 打开指定的文件filename为读模式并返回一个迭代函数,每次调用将获得文件中的一行内容,当到文件尾时，将返回nil,并自动关闭文件。
+
+若不带参数时io.lines() <=> io.input():lines(); 读取默认输入设备的内容，但结束时不关闭文件,如
+
+```
+for line in io.lines("main.lua") do
+
+　　print(line)
+
+　　end
+```
+
+以下实例使用了 seek 方法，定位到文件倒数第 25 个位置并使用 read 方法的 *a 参数，即从当期位置(倒数第 25 个位置)读取整个文件。
+
+```
+-- 以只读方式打开文件
+file = io.open("test.lua", "r")
+
+file:seek("end",-25)
+print(file:read("*a"))
+
+-- 关闭打开的文件
+file:close()
+```
 
 ---
 
