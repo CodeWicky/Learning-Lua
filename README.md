@@ -1087,7 +1087,6 @@ print(file:read("*a"))
 -- 关闭打开的文件
 file:close()
 ```
-
 ---
 
 ## 错误处理
