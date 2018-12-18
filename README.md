@@ -864,14 +864,229 @@ print(mytable)
 
 ## 协同
 
-> 工程中未使用，待补
+Lua中，协同程序与线程的概念比较类似：拥有独立的堆栈，独立的局部变量，独立的指令指针，同时又与其它协同程序共享全局变量和其它大部分东西。
+
+但是他与线程还是有一定区别的：一个具有多个线程的程序可以同时运行几个线程，而协同程序却需要彼此协作的运行。
+
+在任一指定时刻只有一个协同程序在运行，并且这个正在运行的协同程序只有在明确的被要求挂起的时候才会被挂起。
+
+协同程序有点类似同步的多线程，在等待同一个线程锁的几个线程有点类似协同。私以为，它更像是并发任务。
+
+> 以下内容引自[【深入Lua】理解Lua中最强大的特性-coroutine（协程）](https://my.oschina.net/wangxuanyihaha/blog/186401)
+
+|函数名|函数参数|函数返回值|函数作用|
+|:---|:---|:---|:---|
+|coroutine.create(func)|接受单个参数，这个参数是coroutine的主函数|然后返回他的控制器（一个对象为thread）的对象|create函数创建一个新的coroutine，定义了携程内的任务流程。以面向对象的角度，可以看成是coroutien类创建了一个对象co|
+|coroutine.resume(co,[val1,...])|第一个参数：coroutine.create的返回值，即一个thread对象。<br>第二个参数：coroutine中执行需要的参数，是一个变长参数，可传人一多个。|如果程序没有任何运行错误的话，那么会返回true，之后的返回值是前一个调用coroutine.yield中传入的参数<br>如果有任何错误的话，就会返回false,加上错误信息|当你第一次调用coroutine的resume方法时，coroutine从主函数的第一行开始执行，之后再coroutine开始执行后，他会一直运行到自身终止或者是coroutine的下一个yield函数|
+|coroutine.yield(...)|传入变长参数|返回在前一个调用coroutine.resume()中传入的参数值|挂起当前执行的协程，这个协程不能正在使一个c函数，一个元表或一个迭代器|
+|coroutine.running()|空|返回当前正在的协程，如果他被主线程调用的话，会返回nil|同返回值|
+|coroutine.status()|空|返回当前协程的状态：有running,suspended,normal,dead|同返回值|
+
+
+示例代码
+
+```lua
+function foo(a)
+	print("foo", a)
+	return coroutine.yield(2 * a)
+end
+
+co = coroutine.create(function ( a, b )
+	print("co-body", a, b)
+	local r = foo(a + 1)
+	print("co-body", r)
+	local r, s = coroutine.yield(a + b, a - b)
+	print("co-body", r, s)
+	return b, "end"
+end)
+
+print("main", coroutine.resume(co, 1, 10))
+print("main", coroutine.resume(co, "r"))
+print("main", coroutine.resume(co, "x", "y"))
+print("main", coroutine.resume(co, "x", "y"))
+
+--输出
+co-body 1 10
+foo 2
+main true 4
+co-body r
+main true 11, -9
+co-body x y
+main false 10 end
+main false cannot resume dead coroutine
+```
+
+我们还可以用coroutine模拟生产者消费者模式：
+
+```lua
+--生产者
+loop
+	while q is not full
+		create product
+		add the items to q
+	resume to consumer
+	
+--消费者
+loop
+	while q is not full
+		create product
+		add the items to q
+	resume to consumer
+```
+
+我们还可以以此来优化callback，比如一段代码的callback形式是下面这个样子的：
+
+```
+bob.walto(function (  )
+	bob.say(function (  )
+		jane.say("hello")
+	end,"hello")
+end, jane)
+```
+
+我们可以用coroutine让这个结构看起来更加清晰一些：
+
+```
+co = coroutine.create(function (  )
+	local current = coroutine.running
+	bob.walto(function (  )
+		coroutine.resume(current)
+	end, jane)
+	coroutine.yield()
+	bob.say(function (  )
+		coroutine.resume(current)
+	end, "hello")
+	coroutine.yield()
+	jane.say("hello"）
+end)
+
+coroutine.resume(co)
+```
+
+当然，我们还可以对函数进行一下封装，最终他是这个样子的：
+
+```
+function runAsyncFunc( func, ... )
+	local current = coroutine.running
+	func(function (  )
+		coroutine.resume(current)
+	end, ...)
+	coroutine.yield()
+end
+
+coroutine.create(function (  )
+	runAsyncFunc(bob.walkto, jane)
+	runAsyncFunc(bob.say, "hello")
+	jane.say("hello")
+end)
+
+coroutine.resume(co)
+```
+
+可以看出，这样以来，结构就清楚多了。
 
 ---
 
 ## 文件I/O
 
-> 工程中未使用，待补
+Lua I/O 库用于读取和处理文件。分为简单模式、完全模式。
 
+
+|模式|描述|
+|:--|:--|
+|r|以只读方式打开文件，该文件必须存在。|
+|w|打开只写文件，若文件存在则文件长度清为0，即该文件内容会消失。若文件不存在则建立该文件。|
+|a|以附加的方式打开只写文件。若文件不存在，则会建立该文件，如果文件存在，写入的数据会被加到文件尾，即文件原先的内容会被保留。（EOF符保留）|
+|r+|以可读写方式打开文件，该文件必须存在。|
+|w+|打开可读写文件，若文件存在则文件长度清为零，即该文件内容会消失。若文件不存在则建立该文件。|
+|a+|与a类似，但此文件可读可写|
+|b|二进制模式，如果文件是二进制文件，可以加上b|
+|+|号表示对文件既可以读也可以写|
+
+#### 简单模式
+
+```
+-- 以只读方式打开文件
+file = io.open("test.lua", "r")
+
+-- 设置默认输入文件为 test.lua
+io.input(file)
+
+-- 输出文件第一行
+print(io.read())
+
+-- 关闭打开的文件
+io.close(file)
+
+-- 以附加的方式打开只写文件
+file = io.open("test.lua", "a")
+
+-- 设置默认输出文件为 test.lua
+io.output(file)
+
+-- 在文件最后一行添加 Lua 注释
+io.write("--  test.lua 文件末尾注释")
+
+-- 关闭打开的文件
+io.close(file)
+```
+
+#### 完全模式
+
+```
+-- 以只读方式打开文件
+file = io.open("test.lua", "r")
+
+-- 输出文件第一行
+print(file:read())
+
+-- 关闭打开的文件
+file:close()
+
+-- 以附加的方式打开只写文件
+file = io.open("test.lua", "a")
+
+-- 在文件最后一行添加 Lua 注释
+file:write("--test")
+
+-- 关闭打开的文件
+file:close()
+```
+
+其他方法：
+
+- file:seek(optional whence, optional offset): 设置和获取当前文件位置,成功则返回最终的文件位置(按字节),失败则返回nil加错误信息。参数 whence 值可以是:
+	- "set": 从文件头开始
+	- "cur": 从当前位置开始[默认]
+	- "end": 从文件尾开始
+	- offset:默认为0
+	
+	不带参数file:seek()则返回当前位置,file:seek("set")则定位到文件头,file:seek("end")则定位到文件尾并返回文件大小
+- file:flush(): 向文件写入缓冲中的所有数据
+- io.lines(optional file name): 打开指定的文件filename为读模式并返回一个迭代函数,每次调用将获得文件中的一行内容,当到文件尾时，将返回nil,并自动关闭文件。
+
+若不带参数时io.lines() <=> io.input():lines(); 读取默认输入设备的内容，但结束时不关闭文件,如
+
+```
+for line in io.lines("main.lua") do
+
+　　print(line)
+
+　　end
+```
+
+以下实例使用了 seek 方法，定位到文件倒数第 25 个位置并使用 read 方法的 *a 参数，即从当期位置(倒数第 25 个位置)读取整个文件。
+
+```
+-- 以只读方式打开文件
+file = io.open("test.lua", "r")
+
+file:seek("end",-25)
+print(file:read("*a"))
+
+-- 关闭打开的文件
+file:close()
+```
 ---
 
 ## 错误处理
