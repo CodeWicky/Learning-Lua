@@ -193,7 +193,6 @@ function testFun(tab,fun)
     end
 end
 
-
 tab={key1="val1",key2="val2"};
 testFun(tab,
 function(key,val)--匿名函数
